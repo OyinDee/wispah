@@ -297,25 +297,25 @@ export default function DashboardPage() {
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <Card className="bg-card border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 animate-in fade-in-0 slide-in-from-bottom-2 duration-700 delay-100">
-              <CardContent className="p-6 text-center">
+              <CardContent className="p-4 text-center flex flex-col items-center justify-center">
                 <div className="text-3xl font-bold text-foreground mb-1">{messages.length}</div>
                 <div className="text-muted-foreground text-sm">Total Whispers</div>
               </CardContent>
             </Card>
             <Card className="bg-card border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 animate-in fade-in-0 slide-in-from-bottom-2 duration-700 delay-200">
-              <CardContent className="p-6 text-center">
+              <CardContent className="p-4 text-center flex flex-col items-center justify-center">
                 <div className="text-3xl font-bold text-orange-500 mb-1">{unreadCount}</div>
                 <div className="text-muted-foreground text-sm">New Messages</div>
               </CardContent>
             </Card>
             <Card className="bg-card border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 animate-in fade-in-0 slide-in-from-bottom-2 duration-700 delay-300">
-              <CardContent className="p-6 text-center">
+              <CardContent className="p-4 text-center flex flex-col items-center justify-center">
                 <div className="text-3xl font-bold text-blue-500 mb-1">∞</div>
                 <div className="text-muted-foreground text-sm">Anonymous</div>
               </CardContent>
             </Card>
             <Card className="bg-card border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 animate-in fade-in-0 slide-in-from-bottom-2 duration-700 delay-400">
-              <CardContent className="p-6 text-center">
+              <CardContent className="p-4 text-center flex flex-col items-center justify-center">
                 <div className="text-3xl font-bold text-green-500 mb-1 flex items-center justify-center">
                   100%
                   <TrendingUp className="w-4 h-4 ml-1" />
