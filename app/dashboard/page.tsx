@@ -54,16 +54,13 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push("/")
-      return
+      router.push("/");
     }
-
     if (user && !authLoading) {
       const loadInitialMessages = async () => {
         setIsLoading(true)
         await fetchMessages()
       }
-
       loadInitialMessages()
     }
   }, [user, authLoading, router])
@@ -143,17 +140,14 @@ export default function DashboardPage() {
     return () => clearTimeout(timeout)
   }, [isLoading])
 
-  // Show loading while checking auth state
-  if (authLoading) {
+
+  // Show loading while checking auth state or redirecting
+  if (authLoading || (!user && typeof window !== "undefined")) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full"></div>
       </div>
     )
-  }
-
-  if (!user) {
-    return null
   }
 
   if (showSettings) {
