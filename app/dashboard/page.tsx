@@ -6,7 +6,9 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { MessageCircle, Share2, Settings, LogOut, TrendingUp, RefreshCw } from "lucide-react"
+import { MessageCircle, Share2, Settings, LogOut, TrendingUp, RefreshCw, Menu } from "lucide-react"
+import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { useIsMobile } from "@/components/ui/use-mobile"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useAuth } from "@/hooks/use-auth"
 import { apiService, type Message } from "@/lib/api"
@@ -17,6 +19,8 @@ import { PollingIndicator } from "@/components/polling-indicator"
 import { Settings as SettingsComponent } from "@/components/settings"
 
 export default function DashboardPage() {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const isMobile = useIsMobile()
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -199,7 +203,8 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <div className="flex items-center space-x-3 animate-in fade-in-0 slide-in-from-right-4 duration-700">
+              {/* Desktop Nav */}
+              <div className="hidden md:flex items-center space-x-3 animate-in fade-in-0 slide-in-from-right-4 duration-700">
                 <Button
                   variant="ghost"
                   onClick={() => fetchMessages(true)}
@@ -237,6 +242,59 @@ export default function DashboardPage() {
                   Exit
                 </Button>
               </div>
+              {/* Mobile Hamburger */}
+              <button
+                className="md:hidden flex items-center justify-center p-2 rounded-xl hover:bg-accent transition-all duration-200"
+                onClick={() => setMobileNavOpen(true)}
+                aria-label="Open menu"
+              >
+                <Menu className="w-7 h-7 text-foreground" />
+              </button>
+      {/* Mobile Nav Drawer */}
+      <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+        <SheetContent side="right" className="p-0 w-64 bg-background">
+          <h2 className="sr-only">Menu</h2>
+          <div className="flex flex-col space-y-2 p-6">
+            <ThemeToggle />
+            <Button
+              variant="ghost"
+              onClick={() => { fetchMessages(true); setMobileNavOpen(false); }}
+              disabled={isRefreshing}
+              className="justify-start text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl transition-all duration-200 hover:scale-105"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+            <Button
+              variant="ghost"
+              className="justify-start text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl transition-all duration-200 hover:scale-105"
+              asChild
+              onClick={() => setMobileNavOpen(false)}
+            >
+              <Link href="/profile">
+                <Share2 className="w-4 h-4 mr-2" />
+                Share Link
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => { setShowSettings(true); setMobileNavOpen(false); }}
+              className="justify-start text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl transition-all duration-200 hover:scale-105"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Settings
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => { handleLogout(); setMobileNavOpen(false); }}
+              className="justify-start text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl transition-all duration-200 hover:scale-105"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Exit
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
             </div>
           </div>
         </header>
@@ -285,11 +343,11 @@ export default function DashboardPage() {
                         <MessageCircle className="w-6 h-6 mr-3 text-primary" />
                         Your Whispers
                       </h2>
-                      <PollingIndicator isEnabled={isPollingEnabled} interval={5000} />
+                      {/* <PollingIndicator isEnabled={isPollingEnabled} interval={5000} /> */}
                     </div>
-                    {unreadCount > 0 && (
+                    {/* {unreadCount > 0 && (
                       <Badge className="bg-primary text-primary-foreground animate-pulse">{unreadCount} new</Badge>
-                    )}
+                    )} */}
                   </div>
 
                   <div className="space-y-4">
