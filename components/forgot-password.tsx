@@ -29,7 +29,8 @@ export function ForgotPassword({ onBack }: ForgotPasswordProps) {
     setIsLoading(true)
     try {
       const response = await apiService.forgotPassword(username.trim())
-      if (response.stat) {
+      const isSuccess = response.success !== undefined ? response.success : response.stat;
+      if (isSuccess) {
         toast({
           title: "Reset code sent! 📧",
           description: "Please check your email for the password reset code.",
