@@ -193,7 +193,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-foreground">Wispah</h1>
-                  <p className="text-muted-foreground text-sm">@{user.username}'s chamber</p>
+                  <p className="text-muted-foreground text-sm">@{user?.username}'s chamber</p>
                 </div>
               </div>
 
@@ -362,9 +362,11 @@ export default function DashboardPage() {
                         </Button>
                       </div>
                     ) : (
-                      messages.map((message, index) => (
-                        <Item key={message._id || message.id || index} message={message} index={index} />
-                      ))
+                      messages
+                        .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()) // Sort by newest first
+                        .map((message, index) => (
+                          <Item key={message._id} message={message} index={index} />
+                        ))
                     )}
                   </div>
                 </CardContent>

@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { ImageIcon } from "lucide-react"
+import { ImageIcon, DownloadCloudIcon, Loader2 } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { useToast } from "@/hooks/use-toast"
 import type { Message } from "@/lib/api"
@@ -29,173 +29,133 @@ export function MessageCardDownload({ message, timestamp }: MessageCardDownloadP
   }
 
   const generateMessageCard = async () => {
-    if (!user || !canvasRef.current) return
+    if (!user || !canvasRef.current) {
+      toast({
+        title: "Authentication Error",
+        description: "Please log in to download message cards.",
+        variant: "destructive",
+      })
+      return
+    }
 
     setIsGenerating(true)
 
     try {
       const canvas = canvasRef.current
       const ctx = canvas.getContext("2d")
-      if (!ctx) return
+      if (!ctx) throw new Error("Failed to get 2D context")
 
-      // Calculate dynamic canvas size based on message length and image presence
       const messageLength = message.message.length
-      const baseWidth = 600
-      const baseHeight = 400
       const hasImage = message.imageURL && message.imageURL.trim() !== ""
+      const estimatedLines = Math.ceil(messageLength / 40)
+      const messageHeight = estimatedLines * 30
+      const imageHeight = hasImage ? 180 : 0
+      const padding = 30
+      const spacing = 20
+      const headerHeight = 100
+      const contentTopOffset = 50
+      const cardRadius = 24
+      const baseWidth = 400
+      const totalHeight = headerHeight + contentTopOffset + messageHeight + spacing + imageHeight
 
-      // Adjust height based on message length and image
-      const estimatedLines = Math.ceil(messageLength / 50)
-      let dynamicHeight = Math.max(baseHeight, 300 + estimatedLines * 30)
-
-      // Add extra height for image if present
-      if (hasImage) {
-        dynamicHeight += 250 // Extra space for image
-      }
 
       canvas.width = baseWidth
-      canvas.height = dynamicHeight
+      canvas.height = totalHeight
 
-      // Create gradient background
-      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height)
-      gradient.addColorStop(0, "#8B5CF6")
-      gradient.addColorStop(1, "#3B82F6")
-
-      // Fill background
-      ctx.fillStyle = gradient
+      ctx.fillStyle = "#fef9f5"
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-      // Add subtle pattern overlay
-      ctx.fillStyle = "rgba(255, 255, 255, 0.1)"
-      for (let i = 0; i < canvas.width; i += 40) {
-        for (let j = 0; j < canvas.height; j += 40) {
-          ctx.fillRect(i, j, 20, 20)
-        }
-      }
+      ctx.save()
+      ctx.shadowColor = "rgba(0, 0, 0, 0.08)"
+      ctx.shadowBlur = 16
+      ctx.shadowOffsetY = 6
 
-      // Add main card background with rounded corners
-      ctx.fillStyle = "rgba(255, 255, 255, 0.95)"
-      const cardPadding = 40
-      const cardWidth = canvas.width - cardPadding * 2
-      const cardHeight = canvas.height - cardPadding * 2
-
-      // Draw rounded rectangle
+      ctx.fillStyle = "#ffffff"
       ctx.beginPath()
-      ctx.roundRect(cardPadding, cardPadding, cardWidth, cardHeight, 20)
+      ctx.roundRect(0, 0, canvas.width, canvas.height, cardRadius)
+      ctx.fill()
+      ctx.restore()
+
+      const headerGradient = ctx.createLinearGradient(0, 0, canvas.width, 0)
+      headerGradient.addColorStop(0, "#1e3a8a")
+      headerGradient.addColorStop(1, "#000000")
+      ctx.fillStyle = headerGradient
+      ctx.beginPath()
+      ctx.roundRect(0, 0, canvas.width, headerHeight, [
+        cardRadius, // top-left
+        cardRadius, // top-right
+        0,          // bottom-right
+        0           // bottom-left
+      ])
       ctx.fill()
 
-      // Add header
-      ctx.fillStyle = "#1F2937"
-      ctx.font = "bold 24px Inter, sans-serif"
+      ctx.fillStyle = "#fef9f5"
+      ctx.font = "bold 18px 'Georgia', serif"
       ctx.textAlign = "center"
-      ctx.fillText(`ONE OF ${user.username.toUpperCase()}'s wispahs`, canvas.width / 2, 90)
+      ctx.fillText(`One of ${user.username}'s whispers`, canvas.width / 2, 40)
 
-      // Add decorative line
-      ctx.strokeStyle = "#8B5CF6"
-      ctx.lineWidth = 3
-      ctx.beginPath()
-      ctx.moveTo(100, 110)
-      ctx.lineTo(canvas.width - 100, 110)
-      ctx.stroke()
+      ctx.font = "14px sans-serif"
+      ctx.fillStyle = "#cbd5e1"
+      ctx.fillText(timestamp, canvas.width / 2, 68)
 
-      let currentY = 140 // Starting Y position for content
+      let currentY = headerHeight + contentTopOffset
 
-      // Add message content with better text wrapping and centering
-      ctx.fillStyle = "#374151"
-      ctx.font = "18px Inter, sans-serif"
-      ctx.textAlign = "center"
-
-      // Word wrap the message with center alignment
-      const words = message.message.split(" ")
+      ctx.fillStyle = "#1e293b"
+      ctx.font = "18px 'Comic Sans MS', cursive, sans-serif"
+      ctx.textAlign = "left"
+      const quoted = `"${message.message}"`
+      const words = quoted.split(" ")
+      let line = ""
       const lines: string[] = []
-      let currentLine = ""
-      const maxWidth = canvas.width - 120
+      const maxWidth = canvas.width - (padding * 2)
 
       for (const word of words) {
-        const testLine = currentLine + word + " "
+        const testLine = line + word + " "
         const metrics = ctx.measureText(testLine)
-        if (metrics.width > maxWidth && currentLine !== "") {
-          lines.push(currentLine.trim())
-          currentLine = word + " "
+        if (metrics.width > maxWidth && line !== "") {
+          lines.push(line.trim())
+          line = word + " "
         } else {
-          currentLine = testLine
+          line = testLine
         }
       }
-      lines.push(currentLine.trim())
+      lines.push(line.trim())
 
-      // Draw message lines centered
-      const lineHeight = 28
-      lines.forEach((line, index) => {
-        if (index < 8) {
-          // Limit to 8 lines to make room for image
-          ctx.fillText(line, canvas.width / 2, currentY + index * lineHeight)
-        }
+      lines.forEach((l, i) => {
+        ctx.fillText(l, padding, currentY + i * 30)
       })
 
-      currentY += lines.length * lineHeight + 30 // Move Y position down after text
+      currentY += lines.length * 30 + spacing
 
-      // Add image if present
       if (hasImage && message.imageURL) {
         try {
           const img = await loadImage(message.imageURL)
 
-          // Calculate image dimensions to fit within card
-          const maxImageWidth = cardWidth - 80 // Leave some padding
-          const maxImageHeight = 200
+          const imgW = 280
+          const imgH = 160
+          const imgX = (canvas.width - imgW) / 2
+          const imgY = currentY
 
-          let imageWidth = img.width
-          let imageHeight = img.height
+          ctx.fillStyle = "#f1f5f9"
+          ctx.fillRect(imgX - 8, imgY - 8, imgW + 16, imgH + 28)
 
-          // Scale image to fit within bounds while maintaining aspect ratio
-          const aspectRatio = imageWidth / imageHeight
+          ctx.drawImage(img, imgX, imgY, imgW, imgH)
 
-          if (imageWidth > maxImageWidth) {
-            imageWidth = maxImageWidth
-            imageHeight = imageWidth / aspectRatio
-          }
-
-          if (imageHeight > maxImageHeight) {
-            imageHeight = maxImageHeight
-            imageWidth = imageHeight * aspectRatio
-          }
-
-          // Center the image
-          const imageX = (canvas.width - imageWidth) / 2
-          const imageY = currentY
-
-          // Add a subtle border around the image
-          ctx.fillStyle = "#E5E7EB"
-          ctx.fillRect(imageX - 4, imageY - 4, imageWidth + 8, imageHeight + 8)
-
-          // Draw the image
-          ctx.drawImage(img, imageX, imageY, imageWidth, imageHeight)
-
-          currentY += imageHeight + 40 // Move Y position down after image
-        } catch (error) {
-          console.error("Failed to load image for card:", error)
-          // Add a placeholder text if image fails to load
-          ctx.fillStyle = "#9CA3AF"
-          ctx.font = "14px Inter, sans-serif"
+          ctx.fillStyle = "#475569"
+          ctx.font = "12px sans-serif"
           ctx.textAlign = "center"
-          ctx.fillText("📷 Image attachment", canvas.width / 2, currentY + 20)
-          currentY += 50
+          ctx.fillText("Attached Photo", canvas.width / 2, imgY + imgH + 20)
+
+          currentY += imgH + 40
+        } catch (error) {
+          ctx.fillStyle = "#ef4444"
+          ctx.font = "14px sans-serif"
+          ctx.textAlign = "center"
+          ctx.fillText("Failed to load image 😔", canvas.width / 2, currentY)
+          currentY += 40
         }
       }
 
-      // Add timestamp at bottom (adjust position based on content)
-      const timestampY = Math.max(currentY + 30, canvas.height - 80)
-      ctx.fillStyle = "#6B7280"
-      ctx.font = "14px Inter, sans-serif"
-      ctx.textAlign = "center"
-      ctx.fillText(timestamp, canvas.width / 2, timestampY)
-
-      // Add Wispah branding at bottom
-      ctx.fillStyle = "#8B5CF6"
-      ctx.font = "bold 16px Inter, sans-serif"
-      ctx.textAlign = "center"
-      ctx.fillText("✨ Wispah", canvas.width / 2, timestampY + 30)
-
-      // Convert to blob and download
       canvas.toBlob((blob) => {
         if (blob) {
           const url = URL.createObjectURL(blob)
@@ -208,11 +168,12 @@ export function MessageCardDownload({ message, timestamp }: MessageCardDownloadP
           URL.revokeObjectURL(url)
 
           toast({
-            title: "Card downloaded! 🎨",
-            description: hasImage
-              ? "Your message card with image has been saved."
-              : "Your message card has been saved as an image.",
+            title: "Anonymous card downloaded! 📩",
+            description: "Your message card has been saved.",
+            duration: 3000,
           })
+        } else {
+          throw new Error("Failed to create blob from canvas.")
         }
       }, "image/png")
     } catch (error) {
@@ -221,6 +182,7 @@ export function MessageCardDownload({ message, timestamp }: MessageCardDownloadP
         title: "Download failed",
         description: "Unable to generate message card. Please try again.",
         variant: "destructive",
+        duration: 5000,
       })
     } finally {
       setIsGenerating(false)
@@ -230,17 +192,34 @@ export function MessageCardDownload({ message, timestamp }: MessageCardDownloadP
   return (
     <>
       <Button
-        size="sm"
-        variant="ghost"
         onClick={generateMessageCard}
         disabled={isGenerating}
-        className="text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-110"
-        title={message.imageURL ? "Download card with image" : "Download card"}
+        className={`
+          relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium
+          transition-all duration-300 ease-in-out
+          bg-gradient-to-r from-indigo-500 to-purple-600 text-white
+          hover:from-indigo-600 hover:to-purple-700 hover:shadow-lg
+          focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2
+          ${isGenerating ? 'opacity-70 cursor-not-allowed' : ''}
+        `}
+        title={message.imageURL ? "Download anonymous card with image" : "Download anonymous card"}
       >
-        <ImageIcon className="w-3 h-3" />
-        {isGenerating && <span className="ml-1 text-xs">...</span>}
+        {isGenerating ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Generating...</span>
+          </>
+        ) : (
+          <>
+            <DownloadCloudIcon className="h-4 w-4" />
+            {message.imageURL && (
+              <ImageIcon className="w-3 h-3 ml-1" />
+            )}
+          </>
+        )}
+        <span className="sr-only">Download anonymous message card</span>
       </Button>
-      <canvas ref={canvasRef} className="hidden" />
+      <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
     </>
   )
 }
