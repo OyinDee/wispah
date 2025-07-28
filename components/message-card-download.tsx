@@ -101,7 +101,7 @@ export function MessageCardDownload({ message, timestamp }: MessageCardDownloadP
       let currentY = headerHeight + contentTopOffset
 
       ctx.fillStyle = "#1e293b"
-      ctx.font = "18px 'Comic Sans MS', cursive, sans-serif"
+      // ctx.font = "18px 'Comic Sans MS', sans-serif"
       ctx.textAlign = "left"
       const quoted = `"${message.message}"`
       const words = quoted.split(" ")
