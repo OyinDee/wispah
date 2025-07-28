@@ -98,7 +98,7 @@ export function MessageCardDownload({ message, timestamp }: MessageCardDownloadP
 
       let currentY = headerHeight + contentTopOffset
       ctx.fillStyle = "#1e293b"
-      ctx.textAlign = "left"
+     ctx.textAlign = "center"
       const quoted = `"${message.message}"`
       const words = quoted.split(" ")
       let line = ""
@@ -118,7 +118,7 @@ export function MessageCardDownload({ message, timestamp }: MessageCardDownloadP
       lines.push(line.trim())
 
       lines.forEach((l, i) => {
-        ctx.fillText(l, padding, currentY + i * 30)
+        ctx.fillText(l, baseWidth / 2, currentY + i * 30)
       })
 
       currentY += lines.length * 30 + spacing
