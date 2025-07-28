@@ -45,6 +45,8 @@ export function MessageCardDownload({ message, timestamp }: MessageCardDownloadP
       const ctx = canvas.getContext("2d")
       if (!ctx) throw new Error("Failed to get 2D context")
 
+      const dpr = window.devicePixelRatio || 1
+
       const messageLength = message.message.length
       const hasImage = message.imageURL && message.imageURL.trim() !== ""
       const estimatedLines = Math.ceil(messageLength / 40)
@@ -58,56 +60,50 @@ export function MessageCardDownload({ message, timestamp }: MessageCardDownloadP
       const baseWidth = 400
       const totalHeight = headerHeight + contentTopOffset + messageHeight + spacing + imageHeight
 
-
-      canvas.width = baseWidth
-      canvas.height = totalHeight
+      canvas.width = baseWidth * dpr
+      canvas.height = totalHeight * dpr
+      canvas.style.width = `${baseWidth}px`
+      canvas.style.height = `${totalHeight}px`
+      ctx.scale(dpr, dpr)
 
       ctx.fillStyle = "#fef9f5"
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.fillRect(0, 0, baseWidth, totalHeight)
 
       ctx.save()
       ctx.shadowColor = "rgba(0, 0, 0, 0.08)"
       ctx.shadowBlur = 16
       ctx.shadowOffsetY = 6
-
       ctx.fillStyle = "#ffffff"
       ctx.beginPath()
-      ctx.roundRect(0, 0, canvas.width, canvas.height, cardRadius)
+      ctx.roundRect(0, 0, baseWidth, totalHeight, cardRadius)
       ctx.fill()
       ctx.restore()
 
-      const headerGradient = ctx.createLinearGradient(0, 0, canvas.width, 0)
+      const headerGradient = ctx.createLinearGradient(0, 0, baseWidth, 0)
       headerGradient.addColorStop(0, "#1e3a8a")
       headerGradient.addColorStop(1, "#000000")
       ctx.fillStyle = headerGradient
       ctx.beginPath()
-      ctx.roundRect(0, 0, canvas.width, headerHeight, [
-        0, // top-left
-        0, // top-right
-        0,          // bottom-right
-        0           // bottom-left
-      ])
+      ctx.roundRect(0, 0, baseWidth, headerHeight, [0, 0, 0, 0])
       ctx.fill()
 
       ctx.fillStyle = "#fef9f5"
       ctx.font = "bold 18px 'Georgia', serif"
       ctx.textAlign = "center"
-      ctx.fillText(`One of ${user.username}'s whispers`, canvas.width / 2, 40)
+      ctx.fillText(`One of ${user.username}'s whispers`, baseWidth / 2, 40)
 
       ctx.font = "14px sans-serif"
       ctx.fillStyle = "#cbd5e1"
-      ctx.fillText(timestamp, canvas.width / 2, 68)
+      ctx.fillText(timestamp, baseWidth / 2, 68)
 
       let currentY = headerHeight + contentTopOffset
-
       ctx.fillStyle = "#1e293b"
-      // ctx.font = "18px 'Comic Sans MS', sans-serif"
       ctx.textAlign = "left"
       const quoted = `"${message.message}"`
       const words = quoted.split(" ")
       let line = ""
       const lines: string[] = []
-      const maxWidth = canvas.width - (padding * 2)
+      const maxWidth = baseWidth - (padding * 2)
 
       for (const word of words) {
         const testLine = line + word + " "
@@ -130,28 +126,26 @@ export function MessageCardDownload({ message, timestamp }: MessageCardDownloadP
       if (hasImage && message.imageURL) {
         try {
           const img = await loadImage(message.imageURL)
-
           const imgW = 280
           const imgH = 160
-          const imgX = (canvas.width - imgW) / 2
+          const imgX = (baseWidth - imgW) / 2
           const imgY = currentY
 
           ctx.fillStyle = "#f1f5f9"
           ctx.fillRect(imgX - 8, imgY - 8, imgW + 16, imgH + 28)
-
           ctx.drawImage(img, imgX, imgY, imgW, imgH)
 
           ctx.fillStyle = "#475569"
           ctx.font = "12px sans-serif"
           ctx.textAlign = "center"
-          ctx.fillText("Attached Photo", canvas.width / 2, imgY + imgH + 20)
+          ctx.fillText("Attached Photo", baseWidth / 2, imgY + imgH + 20)
 
           currentY += imgH + 40
-        } catch (error) {
+        } catch {
           ctx.fillStyle = "#ef4444"
           ctx.font = "14px sans-serif"
           ctx.textAlign = "center"
-          ctx.fillText("Failed to load image 😔", canvas.width / 2, currentY)
+          ctx.fillText("Failed to load image 😔", baseWidth / 2, currentY)
           currentY += 40
         }
       }
