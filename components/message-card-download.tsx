@@ -82,8 +82,8 @@ export function MessageCardDownload({ message, timestamp }: MessageCardDownloadP
       ctx.fillStyle = headerGradient
       ctx.beginPath()
       ctx.roundRect(0, 0, canvas.width, headerHeight, [
-        cardRadius, // top-left
-        cardRadius, // top-right
+        0, // top-left
+        0, // top-right
         0,          // bottom-right
         0           // bottom-left
       ])
